@@ -3,6 +3,7 @@
 
 @interface BlurView : RCTView
 
+@property (nonatomic) BOOL isVibrant;
 @property (nonatomic, copy) NSString *blurType;
 
 @end

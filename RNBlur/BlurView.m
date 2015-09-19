@@ -1,15 +1,12 @@
 #import "BlurView.h"
 
 @implementation BlurView {
-  UIVisualEffectView *_visualEffectView;
+  UIVisualEffectView *_blurView;
+  UIVisualEffectView *_vibrancyView;
 }
 
 - (void)setBlurType:(NSString *)blurType
 {
-  if (_visualEffectView) {
-    [_visualEffectView removeFromSuperview];
-  }
-
   UIBlurEffect *blurEffect;
 
   if ([blurType isEqual: @"xlight"]) {
@@ -19,18 +16,46 @@
   } else if ([blurType isEqual: @"dark"]) {
     blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
   } else {
-    blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+    return;
   }
 
-  _visualEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+  UIView *contentView;
+  NSArray *subviews;
+  if (_blurView) {
+    contentView = (self.isVibrant ? _vibrancyView : _blurView).contentView;
+    subviews = [contentView.subviews copy];
+    [_blurView removeFromSuperview];
+  }
+
+  if (self.isVibrant) {
+    UIVibrancyEffect *vibrancyEffect = [UIVibrancyEffect effectForBlurEffect:blurEffect];
+    _vibrancyView = [[UIVisualEffectView alloc] initWithEffect:vibrancyEffect];
+  }
+
+  _blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+
+  contentView = (self.isVibrant ? _vibrancyView : _blurView).contentView;
+  for (UIView *subview in subviews) {
+    [contentView addSubview:subview];
+  }
+
+  if (self.isVibrant) {
+    [_blurView.contentView addSubview:_vibrancyView];
+  }
+
+  [self addSubview:_blurView];
 }
 
--(void)layoutSubviews
+- (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex
+{
+  contentView = (self.isVibrant ? _vibrancyView : _blurView).contentView;
+  [contentView addSubview:(UIView*)subview];
+}
+
+- (void)layoutSubviews
 {
   [super layoutSubviews];
-
-  _visualEffectView.frame = self.bounds;
-  [self insertSubview:_visualEffectView atIndex:0];
+  _blurView.frame = self.bounds;
 }
 
 @end
